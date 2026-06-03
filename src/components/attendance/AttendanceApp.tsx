@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchSheetCsv } from "@/lib/api/sheet.functions";
 
 // ---------- Types ----------
 type Mark = "P" | "A" | null;
@@ -14,14 +13,8 @@ interface Student {
 // records[studentId][YYYY-MM-DD] = "P" | "A"
 type Records = Record<string, Record<string, "P" | "A">>;
 
-interface SheetState {
-  url: string;
-  loadedAt: number | null;
-}
-
 // ---------- LocalStorage helpers ----------
 const LS_KEYS = {
-  sheet: "att.sheet.v1",
   students: "att.students.v1",
   records: "att.records.v1",
 };
@@ -41,82 +34,6 @@ function save<T>(key: string, value: T) {
 }
 
 // ---------- Sheet URL parsing ----------
-function extractSheetId(url: string): string | null {
-  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  return m ? m[1] : null;
-}
-function extractGid(url: string): string {
-  const m = url.match(/[#&?]gid=(\d+)/);
-  return m ? m[1] : "0";
-}
-function csvExportUrl(url: string): string | null {
-  const id = extractSheetId(url);
-  if (!id) return null;
-  const gid = extractGid(url);
-  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
-}
-
-// Minimal CSV parser supporting quoted fields & escaped quotes
-function parseCSV(text: string): string[][] {
-  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
-  const rows: string[][] = [];
-  let cur: string[] = [];
-  let field = "";
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
-      } else field += c;
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === ",") { cur.push(field); field = ""; }
-      else if (c === "\n") { cur.push(field); rows.push(cur); cur = []; field = ""; }
-      else if (c === "\r") { /* ignore */ }
-      else field += c;
-    }
-  }
-  if (field.length || cur.length) { cur.push(field); rows.push(cur); }
-  return rows.filter((r) => r.some((cell) => cell.trim().length));
-}
-
-function studentsFromCSV(rows: string[][]): Student[] {
-  if (rows.length === 0) return [];
-  // Try to detect header row
-  const header = rows[0].map((h) => h.trim().toLowerCase());
-  const hasHeader = header.some((h) => /roll|name|class|student|grade|section/.test(h));
-  const ncols = Math.max(...rows.map((r) => r.length));
-
-  let rollIdx = -1, nameIdx = -1, classIdx = -1;
-  if (hasHeader) {
-    rollIdx = header.findIndex((h) => /roll|^id$|^no\.?$|number/.test(h));
-    nameIdx = header.findIndex((h) => /name|student/.test(h));
-    classIdx = header.findIndex((h) => /class|grade|section/.test(h));
-  }
-  // Fallbacks based on column count
-  if (nameIdx === -1) {
-    if (ncols === 1) { nameIdx = 0; }
-    else if (ncols === 2) { rollIdx = 0; nameIdx = 1; }
-    else { rollIdx = 0; nameIdx = 1; classIdx = 2; }
-  }
-
-  const dataRows = hasHeader ? rows.slice(1) : rows;
-  const out: Student[] = [];
-  const seen = new Set<string>();
-  dataRows.forEach((r, i) => {
-    const rawRoll = rollIdx >= 0 ? (r[rollIdx] ?? "").trim() : "";
-    const name = (r[nameIdx] ?? "").trim();
-    const klass = classIdx >= 0 ? (r[classIdx] ?? "").trim() : "";
-    if (!name) return;
-    const roll = rawRoll || String(i + 1);
-    const id = `${roll}::${name}`.toLowerCase();
-    if (seen.has(id)) return;
-    seen.add(id);
-    out.push({ id, roll, name, klass });
-  });
-  return out;
-}
 
 // ---------- Date helpers ----------
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -147,11 +64,8 @@ function useToast() {
 // ============ Main component ============
 export function AttendanceApp() {
   const today = todayParts();
-  const [sheet, setSheet] = useState<SheetState>(() => load<SheetState>(LS_KEYS.sheet, { url: "", loadedAt: null }));
-  const [sheetInput, setSheetInput] = useState(sheet.url);
   const [students, setStudents] = useState<Student[]>(() => load<Student[]>(LS_KEYS.students, []));
   const [records, setRecords] = useState<Records>(() => load<Records>(LS_KEYS.records, {}));
-  const [loadingSheet, setLoadingSheet] = useState(false);
 
   const [tab, setTab] = useState<"mark" | "view" | "manage">("mark");
   const [month, setMonth] = useState<number>(today.month0);
@@ -166,7 +80,6 @@ export function AttendanceApp() {
   const { toast, show } = useToast();
 
   // Persist
-  useEffect(() => save(LS_KEYS.sheet, sheet), [sheet]);
   useEffect(() => save(LS_KEYS.students, students), [students]);
   useEffect(() => save(LS_KEYS.records, records), [records]);
 
@@ -202,42 +115,6 @@ export function AttendanceApp() {
   }, [filteredStudents, records, isCurrentMonth, todayIso]);
 
   // ----- Actions -----
-  async function connectSheet() {
-    const url = sheetInput.trim();
-    if (!url) { show("Paste a Google Sheet URL first", "error"); return; }
-    const id = extractSheetId(url);
-    if (!id) { show("That doesn't look like a Google Sheet URL", "error"); return; }
-    const gid = extractGid(url);
-    setLoadingSheet(true);
-    try {
-      const result = await fetchSheetCsv({ data: { sheetId: id, gid } });
-      if (!result.ok) throw new Error(result.error);
-      const rows = parseCSV(result.csv);
-      const parsed = studentsFromCSV(rows);
-      if (rows.length === 0) {
-        throw new Error("No CSV data was returned. Make sure the sheet is public and contains at least one row of student data.");
-      }
-      if (parsed.length === 0) {
-        const firstRow = rows[0] ?? [];
-        const headerRow = firstRow.map((cell) => cell.trim().toLowerCase()).join(", ");
-        const hasHeader = /name|student/.test(headerRow);
-        if (hasHeader) {
-          throw new Error("Sheet loaded, but no student rows were found. Add rows below the header and try again.");
-        }
-        throw new Error(`No student names found. Sheet has ${rows.length} row(s). Expected a column named "Name" (or just a list of names).`);
-      }
-      // Merge: keep existing records by id, replace student list
-      setStudents(parsed);
-      setSheet({ url, loadedAt: Date.now() });
-      show(`Loaded ${parsed.length} students from sheet`, "success");
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to load";
-      show(`Could not load sheet: ${msg}`, "error");
-    } finally {
-      setLoadingSheet(false);
-    }
-  }
-
   function setMark(studentId: string, dateKey: string, value: Mark) {
     setRecords((prev) => {
       const next = { ...prev };
@@ -322,7 +199,6 @@ export function AttendanceApp() {
   }, [filteredStudents, records, days, year, month]);
 
   // ---------- Render ----------
-  const isConnected = sheet.loadedAt != null;
   const years = [year - 2, year - 1, year, year + 1];
 
   return (
@@ -333,34 +209,14 @@ export function AttendanceApp() {
             <div className="att-logo-icon">📋</div>
             <div>
               <h1>AttendanceMS</h1>
-              <div className="sub">{isConnected ? "Google Sheet connected" : "Roster manager"}</div>
+              <div className="sub">Roster manager</div>
             </div>
           </div>
           <div className="att-header-right">
-            <span className={`att-badge ${isConnected ? "ok" : ""}`}>{isConnected ? "● Connected" : "○ Not Connected"}</span>
             <span className="att-badge">{students.length} students</span>
           </div>
         </header>
 
-        <div className="att-config-banner">
-          <div className="cb-icon">🔗</div>
-          <div className="cb-text">
-            <h3>Connect a Google Sheet</h3>
-            <p>Paste any public Google Sheet link with columns: Roll, Name, Class.</p>
-          </div>
-          <div className="att-config-form">
-            <input
-              className="att-config-input"
-              type="text"
-              placeholder="https://docs.google.com/spreadsheets/d/..."
-              value={sheetInput}
-              onChange={(e) => setSheetInput(e.target.value)}
-            />
-            <button className="att-btn att-btn-primary" disabled={loadingSheet} onClick={connectSheet}>
-              {loadingSheet ? (<><span className="att-spinner" />Loading</>) : "Load →"}
-            </button>
-          </div>
-        </div>
 
         <div className="att-tabs" role="tablist">
           <button className={`att-tab ${tab === "mark" ? "active" : ""}`} onClick={() => setTab("mark")}>✏️ Mark Attendance</button>
@@ -419,7 +275,7 @@ export function AttendanceApp() {
                 </div>
               </div>
               {filteredStudents.length === 0 ? (
-                <div className="att-loading">No students yet. Load a Google Sheet or add students manually under "Manage Students".</div>
+                <div className="att-loading">No students yet. Add students manually under "Manage Students".</div>
               ) : (
                 <div className="att-table-scroll">
                   <table className="att-table">
@@ -531,10 +387,6 @@ export function AttendanceApp() {
 
         {tab === "manage" && (
           <section className="att-section">
-            <div className="att-note">
-              <b>Note:</b> Writing back to Google Sheets requires per-user OAuth. This app reads your sheet via the public CSV export and stores all marks in your browser. Use <code>Export CSV</code> to push results back to Sheets manually, or ask to upgrade to OAuth-based sync.
-            </div>
-
             <div className="att-add-panel">
               <h3>➕ Add New Student</h3>
               <div className="att-add-form">
@@ -557,7 +409,6 @@ export function AttendanceApp() {
             <div className="att-table-wrap">
               <div className="att-table-header">
                 <h2>Student List ({students.length})</h2>
-                <button className="att-btn att-btn-ghost att-btn-sm" disabled={!sheet.url} onClick={connectSheet}>🔄 Refresh from Sheet</button>
               </div>
               {students.length === 0 ? (
                 <div className="att-loading">No students yet.</div>
