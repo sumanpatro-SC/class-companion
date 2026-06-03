@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchSheetCsv } from "@/lib/api/sheet.functions";
 
 // ---------- Types ----------
 type Mark = "P" | "A" | null;
@@ -203,17 +204,14 @@ export function AttendanceApp() {
   async function connectSheet() {
     const url = sheetInput.trim();
     if (!url) { show("Paste a Google Sheet URL first", "error"); return; }
-    const csv = csvExportUrl(url);
-    if (!csv) { show("That doesn't look like a Google Sheet URL", "error"); return; }
+    const id = extractSheetId(url);
+    if (!id) { show("That doesn't look like a Google Sheet URL", "error"); return; }
+    const gid = extractGid(url);
     setLoadingSheet(true);
     try {
-      const res = await fetch(csv);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      if (/^\s*<(!doctype|html)/i.test(text)) {
-        throw new Error("Sheet isn't public. In Google Sheets: Share → General access → Anyone with the link.");
-      }
-      const rows = parseCSV(text);
+      const result = await fetchSheetCsv({ data: { sheetId: id, gid } });
+      if (!result.ok) throw new Error(result.error);
+      const rows = parseCSV(result.csv);
       const parsed = studentsFromCSV(rows);
       if (parsed.length === 0) {
         throw new Error(`No student names found. Sheet has ${rows.length} row(s). Expected a column named "Name" (or just a list of names).`);
@@ -224,7 +222,7 @@ export function AttendanceApp() {
       show(`Loaded ${parsed.length} students from sheet`, "success");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to load";
-      show(`Could not load sheet: ${msg}. Make sure it's shared as "Anyone with the link".`, "error");
+      show(`Could not load sheet: ${msg}`, "error");
     } finally {
       setLoadingSheet(false);
     }
