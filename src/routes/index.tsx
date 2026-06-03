@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AttendanceApp } from "../components/attendance/AttendanceApp";
-import "../components/attendance/attendance.css";
+import { AttendanceApp } from "@/components/attendance/AttendanceApp";
+import "@/components/attendance/attendance.css";
 
 export const Route = createFileRoute("/")({
   head: () => ({
