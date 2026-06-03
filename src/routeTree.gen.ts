@@ -9,38 +9,326 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentsRouteImport } from './routes/students'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SeatingRouteImport } from './routes/seating'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ProfilesRouteImport } from './routes/profiles'
+import { Route as LeavesRouteImport } from './routes/leaves'
+import { Route as HolidaysRouteImport } from './routes/holidays'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ClassesRouteImport } from './routes/classes'
+import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AnnouncementsRouteImport } from './routes/announcements'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AttendanceRecordsRouteImport } from './routes/attendance/records'
+import { Route as AttendanceMarkRouteImport } from './routes/attendance/mark'
 
+const StudentsRoute = StudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeatingRoute = SeatingRouteImport.update({
+  id: '/seating',
+  path: '/seating',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilesRoute = ProfilesRouteImport.update({
+  id: '/profiles',
+  path: '/profiles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeavesRoute = LeavesRouteImport.update({
+  id: '/leaves',
+  path: '/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HolidaysRoute = HolidaysRouteImport.update({
+  id: '/holidays',
+  path: '/holidays',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassesRoute = ClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnouncementsRoute = AnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AttendanceRecordsRoute = AttendanceRecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => AttendanceRoute,
+} as any)
+const AttendanceMarkRoute = AttendanceMarkRouteImport.update({
+  id: '/mark',
+  path: '/mark',
+  getParentRoute: () => AttendanceRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/analytics': typeof AnalyticsRoute
+  '/announcements': typeof AnnouncementsRoute
+  '/attendance': typeof AttendanceRouteWithChildren
+  '/classes': typeof ClassesRoute
+  '/dashboard': typeof DashboardRoute
+  '/holidays': typeof HolidaysRoute
+  '/leaves': typeof LeavesRoute
+  '/profiles': typeof ProfilesRoute
+  '/reports': typeof ReportsRoute
+  '/seating': typeof SeatingRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
+  '/attendance/mark': typeof AttendanceMarkRoute
+  '/attendance/records': typeof AttendanceRecordsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/analytics': typeof AnalyticsRoute
+  '/announcements': typeof AnnouncementsRoute
+  '/attendance': typeof AttendanceRouteWithChildren
+  '/classes': typeof ClassesRoute
+  '/dashboard': typeof DashboardRoute
+  '/holidays': typeof HolidaysRoute
+  '/leaves': typeof LeavesRoute
+  '/profiles': typeof ProfilesRoute
+  '/reports': typeof ReportsRoute
+  '/seating': typeof SeatingRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
+  '/attendance/mark': typeof AttendanceMarkRoute
+  '/attendance/records': typeof AttendanceRecordsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/analytics': typeof AnalyticsRoute
+  '/announcements': typeof AnnouncementsRoute
+  '/attendance': typeof AttendanceRouteWithChildren
+  '/classes': typeof ClassesRoute
+  '/dashboard': typeof DashboardRoute
+  '/holidays': typeof HolidaysRoute
+  '/leaves': typeof LeavesRoute
+  '/profiles': typeof ProfilesRoute
+  '/reports': typeof ReportsRoute
+  '/seating': typeof SeatingRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
+  '/attendance/mark': typeof AttendanceMarkRoute
+  '/attendance/records': typeof AttendanceRecordsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/achievements'
+    | '/analytics'
+    | '/announcements'
+    | '/attendance'
+    | '/classes'
+    | '/dashboard'
+    | '/holidays'
+    | '/leaves'
+    | '/profiles'
+    | '/reports'
+    | '/seating'
+    | '/settings'
+    | '/students'
+    | '/attendance/mark'
+    | '/attendance/records'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/achievements'
+    | '/analytics'
+    | '/announcements'
+    | '/attendance'
+    | '/classes'
+    | '/dashboard'
+    | '/holidays'
+    | '/leaves'
+    | '/profiles'
+    | '/reports'
+    | '/seating'
+    | '/settings'
+    | '/students'
+    | '/attendance/mark'
+    | '/attendance/records'
+  id:
+    | '__root__'
+    | '/'
+    | '/achievements'
+    | '/analytics'
+    | '/announcements'
+    | '/attendance'
+    | '/classes'
+    | '/dashboard'
+    | '/holidays'
+    | '/leaves'
+    | '/profiles'
+    | '/reports'
+    | '/seating'
+    | '/settings'
+    | '/students'
+    | '/attendance/mark'
+    | '/attendance/records'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
+  AnalyticsRoute: typeof AnalyticsRoute
+  AnnouncementsRoute: typeof AnnouncementsRoute
+  AttendanceRoute: typeof AttendanceRouteWithChildren
+  ClassesRoute: typeof ClassesRoute
+  DashboardRoute: typeof DashboardRoute
+  HolidaysRoute: typeof HolidaysRoute
+  LeavesRoute: typeof LeavesRoute
+  ProfilesRoute: typeof ProfilesRoute
+  ReportsRoute: typeof ReportsRoute
+  SeatingRoute: typeof SeatingRoute
+  SettingsRoute: typeof SettingsRoute
+  StudentsRoute: typeof StudentsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/students': {
+      id: '/students'
+      path: '/students'
+      fullPath: '/students'
+      preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seating': {
+      id: '/seating'
+      path: '/seating'
+      fullPath: '/seating'
+      preLoaderRoute: typeof SeatingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profiles': {
+      id: '/profiles'
+      path: '/profiles'
+      fullPath: '/profiles'
+      preLoaderRoute: typeof ProfilesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaves': {
+      id: '/leaves'
+      path: '/leaves'
+      fullPath: '/leaves'
+      preLoaderRoute: typeof LeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/holidays': {
+      id: '/holidays'
+      path: '/holidays'
+      fullPath: '/holidays'
+      preLoaderRoute: typeof HolidaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classes': {
+      id: '/classes'
+      path: '/classes'
+      fullPath: '/classes'
+      preLoaderRoute: typeof ClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/announcements': {
+      id: '/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AnnouncementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +336,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/attendance/records': {
+      id: '/attendance/records'
+      path: '/records'
+      fullPath: '/attendance/records'
+      preLoaderRoute: typeof AttendanceRecordsRouteImport
+      parentRoute: typeof AttendanceRoute
+    }
+    '/attendance/mark': {
+      id: '/attendance/mark'
+      path: '/mark'
+      fullPath: '/attendance/mark'
+      preLoaderRoute: typeof AttendanceMarkRouteImport
+      parentRoute: typeof AttendanceRoute
+    }
   }
 }
 
+interface AttendanceRouteChildren {
+  AttendanceMarkRoute: typeof AttendanceMarkRoute
+  AttendanceRecordsRoute: typeof AttendanceRecordsRoute
+}
+
+const AttendanceRouteChildren: AttendanceRouteChildren = {
+  AttendanceMarkRoute: AttendanceMarkRoute,
+  AttendanceRecordsRoute: AttendanceRecordsRoute,
+}
+
+const AttendanceRouteWithChildren = AttendanceRoute._addFileChildren(
+  AttendanceRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
+  AnalyticsRoute: AnalyticsRoute,
+  AnnouncementsRoute: AnnouncementsRoute,
+  AttendanceRoute: AttendanceRouteWithChildren,
+  ClassesRoute: ClassesRoute,
+  DashboardRoute: DashboardRoute,
+  HolidaysRoute: HolidaysRoute,
+  LeavesRoute: LeavesRoute,
+  ProfilesRoute: ProfilesRoute,
+  ReportsRoute: ReportsRoute,
+  SeatingRoute: SeatingRoute,
+  SettingsRoute: SettingsRoute,
+  StudentsRoute: StudentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

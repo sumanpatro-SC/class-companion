@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Sidebar } from "@/components/layout/sidebar";
 
 import appCss from "../styles.css?url";
 
@@ -118,8 +119,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar className="w-64 hidden md:flex" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Outlet />
+        </div>
+      </div>
     </QueryClientProvider>
   );
 }
