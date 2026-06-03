@@ -120,7 +120,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar className="w-64 hidden md:flex" />
+        <Sidebar className="w-64 flex" />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Outlet />
         </div>
