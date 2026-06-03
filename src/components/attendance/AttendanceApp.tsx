@@ -58,6 +58,7 @@ function csvExportUrl(url: string): string | null {
 
 // Minimal CSV parser supporting quoted fields & escaped quotes
 function parseCSV(text: string): string[][] {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
   const rows: string[][] = [];
   let cur: string[] = [];
   let field = "";
@@ -213,7 +214,16 @@ export function AttendanceApp() {
       if (!result.ok) throw new Error(result.error);
       const rows = parseCSV(result.csv);
       const parsed = studentsFromCSV(rows);
+      if (rows.length === 0) {
+        throw new Error("No CSV data was returned. Make sure the sheet is public and contains at least one row of student data.");
+      }
       if (parsed.length === 0) {
+        const firstRow = rows[0] ?? [];
+        const headerRow = firstRow.map((cell) => cell.trim().toLowerCase()).join(", ");
+        const hasHeader = /name|student/.test(headerRow);
+        if (hasHeader) {
+          throw new Error("Sheet loaded, but no student rows were found. Add rows below the header and try again.");
+        }
         throw new Error(`No student names found. Sheet has ${rows.length} row(s). Expected a column named "Name" (or just a list of names).`);
       }
       // Merge: keep existing records by id, replace student list

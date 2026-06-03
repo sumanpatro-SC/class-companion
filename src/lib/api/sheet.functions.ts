@@ -10,7 +10,8 @@ export const fetchSheetCsv = createServerFn({ method: "POST" })
     if (!res.ok) {
       return { ok: false as const, error: `Google responded ${res.status}. Make sure the sheet is shared as "Anyone with the link".` };
     }
-    if (/^\s*<(!doctype|html)/i.test(text)) {
+    const preview = text.slice(0, 256);
+    if (/(?:<!doctype|<html|<head|<body|<script|<title|<meta)/i.test(preview)) {
       return { ok: false as const, error: 'Sheet is not public. In Google Sheets: Share → General access → "Anyone with the link" → Viewer.' };
     }
     return { ok: true as const, csv: text };
