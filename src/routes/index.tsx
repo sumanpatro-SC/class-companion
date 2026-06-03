@@ -1,15 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AttendanceApp } from "@/components/attendance/AttendanceApp";
-import "@/components/attendance/attendance.css";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AttendanceMS — Google Sheets Attendance Manager" },
-      { name: "description", content: "Mark, track, and export class attendance backed by any public Google Sheet." },
-      { property: "og:title", content: "AttendanceMS — Attendance Manager" },
-      { property: "og:description", content: "Mark, track, and export class attendance backed by any public Google Sheet." },
+      { title: "Class Companion" },
+      { name: "description", content: "Welcome to Class Companion" },
+      { property: "og:title", content: "Class Companion" },
+      { property: "og:description", content: "Welcome to Class Companion" },
     ],
   }),
-  component: AttendanceApp,
+  component: () => (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-4xl font-bold text-foreground">Welcome</h1>
+        <p className="mt-4 text-muted-foreground">Class Companion is ready to use.</p>
+      </div>
+    </div>
+  ),
 });
