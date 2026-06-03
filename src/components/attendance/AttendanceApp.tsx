@@ -210,9 +210,14 @@ export function AttendanceApp() {
       const res = await fetch(csv);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
+      if (/^\s*<(!doctype|html)/i.test(text)) {
+        throw new Error("Sheet isn't public. In Google Sheets: Share → General access → Anyone with the link.");
+      }
       const rows = parseCSV(text);
       const parsed = studentsFromCSV(rows);
-      if (parsed.length === 0) throw new Error("No students found in sheet");
+      if (parsed.length === 0) {
+        throw new Error(`No student names found. Sheet has ${rows.length} row(s). Expected a column named "Name" (or just a list of names).`);
+      }
       // Merge: keep existing records by id, replace student list
       setStudents(parsed);
       setSheet({ url, loadedAt: Date.now() });
