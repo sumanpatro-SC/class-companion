@@ -83,18 +83,35 @@ function studentsFromCSV(rows: string[][]): Student[] {
   if (rows.length === 0) return [];
   // Try to detect header row
   const header = rows[0].map((h) => h.trim().toLowerCase());
-  const hasHeader = header.some((h) => /roll|name|class/.test(h));
-  const rollIdx = hasHeader ? header.findIndex((h) => /roll/.test(h)) : 0;
-  const nameIdx = hasHeader ? header.findIndex((h) => /name/.test(h)) : 1;
-  const classIdx = hasHeader ? header.findIndex((h) => /class/.test(h)) : 2;
+  const hasHeader = header.some((h) => /roll|name|class|student|grade|section/.test(h));
+  const ncols = Math.max(...rows.map((r) => r.length));
+
+  let rollIdx = -1, nameIdx = -1, classIdx = -1;
+  if (hasHeader) {
+    rollIdx = header.findIndex((h) => /roll|^id$|^no\.?$|number/.test(h));
+    nameIdx = header.findIndex((h) => /name|student/.test(h));
+    classIdx = header.findIndex((h) => /class|grade|section/.test(h));
+  }
+  // Fallbacks based on column count
+  if (nameIdx === -1) {
+    if (ncols === 1) { nameIdx = 0; }
+    else if (ncols === 2) { rollIdx = 0; nameIdx = 1; }
+    else { rollIdx = 0; nameIdx = 1; classIdx = 2; }
+  }
+
   const dataRows = hasHeader ? rows.slice(1) : rows;
   const out: Student[] = [];
+  const seen = new Set<string>();
   dataRows.forEach((r, i) => {
-    const roll = (r[rollIdx] ?? "").trim() || String(i + 1);
+    const rawRoll = rollIdx >= 0 ? (r[rollIdx] ?? "").trim() : "";
     const name = (r[nameIdx] ?? "").trim();
-    const klass = (r[classIdx] ?? "").trim();
+    const klass = classIdx >= 0 ? (r[classIdx] ?? "").trim() : "";
     if (!name) return;
-    out.push({ id: `${roll}::${name}`.toLowerCase(), roll, name, klass });
+    const roll = rawRoll || String(i + 1);
+    const id = `${roll}::${name}`.toLowerCase();
+    if (seen.has(id)) return;
+    seen.add(id);
+    out.push({ id, roll, name, klass });
   });
   return out;
 }
@@ -193,9 +210,14 @@ export function AttendanceApp() {
       const res = await fetch(csv);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
+      if (/^\s*<(!doctype|html)/i.test(text)) {
+        throw new Error("Sheet isn't public. In Google Sheets: Share → General access → Anyone with the link.");
+      }
       const rows = parseCSV(text);
       const parsed = studentsFromCSV(rows);
-      if (parsed.length === 0) throw new Error("No students found in sheet");
+      if (parsed.length === 0) {
+        throw new Error(`No student names found. Sheet has ${rows.length} row(s). Expected a column named "Name" (or just a list of names).`);
+      }
       // Merge: keep existing records by id, replace student list
       setStudents(parsed);
       setSheet({ url, loadedAt: Date.now() });
